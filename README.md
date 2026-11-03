@@ -28,26 +28,36 @@ A workflow can combine different kinds of steps:
 
 The visual editor is paired with a backend workflow specification and compiler/runtime. The intention is for the canvas and the natural-language builder to operate on the same workflow definition.
 
-## Current foundation
+## Current implementation status
 
-The following capabilities are represented in the current codebase. Their depth varies by feature, and individual integrations may require local configuration.
+This is more than a static workflow canvas: several end-to-end capabilities are already implemented at a basic level. The platform is still a prototype, and implementation depth varies by node and integration.
 
-- **Visual workflow editor** built with React, TypeScript, and React Flow.
-- **Node and edge editing**, including an inspector for configuring selected workflow elements.
-- **Natural-language workflow assistant** for describing changes and applying structured workflow mutations.
-- **Shared workflow specification** with JSON Schema, TypeScript types, and Pydantic models.
-- **Backend validation and compilation** for translating workflow specifications into executable graphs.
-- **LangGraph-based execution foundation** with state and trace handling.
-- **Tool registry and node/tool compatibility checks.**
-- **Tool binding modes** that distinguish explicit demo/stub behavior from connected integrations.
-- **Credential references** so workflow definitions can refer to credentials without embedding secret values.
-- **Approval and execution-event foundations**, including streaming run updates.
-- **Persistence foundations**, including PostgreSQL-backed storage.
-- **Example workflow definitions** and sample invoice data.
+| Area | Current status | Notes |
+|---|---|---|
+| Visual workflow editor | Implemented | React Flow canvas, node/edge editing, and node inspector |
+| Workflow specification | Implemented | Shared schema/types across frontend and backend |
+| Workflow validation and compilation | Implemented foundation | Converts supported workflow specifications into executable graphs |
+| Workflow execution | Implemented foundation | LangGraph-based runtime, state handling, and execution events |
+| AI/model calls | Basic implementation | Model-call node supports configured AI provider paths |
+| Natural-language workflow editing | Basic implementation | Chat assistant can interpret workflow-change requests and apply structured mutations |
+| File reading | Basic implementation | Read-file workflow capability |
+| File summarisation | Basic implementation | Can produce summaries from supported file content |
+| Email reading | Basic implementation | Connected email read path |
+| Email sending | Basic implementation | Connected send-email path |
+| Retrieval-augmented generation (RAG) | Basic implementation | Simple document retrieval to provide context to AI responses; not a full enterprise knowledge platform |
+| Tool registry and bindings | Implemented foundation | Tool identity, compatibility, and binding validation |
+| Credential references | Implemented foundation | Workflow specs reference credentials rather than embedding secret values |
+| Human approval | Partial / evolving | Approval and execution-event foundations exist; coverage depends on the workflow path |
+| Persistence | Implemented foundation | PostgreSQL-backed persistence support is present |
+| Other node types | Placeholder / partial | Some palette entries are currently UI/demo nodes without complete real executors |
 
-### Important implementation note
+### What "basic implementation" means
 
-The node palette and editor are ahead of the implementation of some node executors. Some nodes are currently placeholders, demos, or partially wired components. A node being selectable or configurable in the UI should not be interpreted as proof that the corresponding real-world action is fully implemented. The roadmap tracks this gap explicitly.
+The file, email, and RAG capabilities are real implemented paths, but they should be understood as early versions. They may have limited supported formats, retrieval behavior, configuration, error handling, or production hardening. In particular, simple RAG should not be described as advanced vector search, large-scale indexing, or a complete knowledge-management system unless those capabilities are added and tested.
+
+### Important node-catalogue note
+
+The node palette is broader than the set of fully implemented executors. Some nodes are placeholders, demos, or partially wired components. A node being selectable or configurable in the UI does not guarantee that its corresponding real-world action is executable. The roadmap tracks this implementation gap explicitly.
 
 ## Architecture at a glance
 
@@ -213,7 +223,7 @@ Some backend tests and integration paths may require additional environment conf
 
 ## Roadmap
 
-This roadmap is intentionally honest about the prototype stage. The node catalogue is broader than the set of fully implemented real executors. The priority is to make each node's behavior reliable before expanding the catalogue further.
+This roadmap is intentionally honest about the prototype stage. Items marked complete represent capabilities that exist in a basic or foundational form, not necessarily production-grade implementations. The node catalogue is broader than the set of fully implemented real executors. The priority is to make each node's behavior reliable before expanding the catalogue further.
 
 ### Phase 1: Stabilise the workflow core
 
@@ -232,10 +242,15 @@ This roadmap is intentionally honest about the prototype stage. The node catalog
 - [ ] Audit every node type and label it as **implemented**, **partial**, **demo**, or **planned**.
 - [ ] Define consistent input/output contracts for every node.
 - [ ] Implement and test core control-flow nodes.
-- [ ] Complete AI/model-call node execution and structured outputs.
-- [ ] Complete file and document nodes, including common formats.
-- [ ] Complete email nodes with safe test/send behavior.
-- [ ] Implement human approval and review steps end to end.
+- [x] Implement basic AI/model-call execution.
+- [x] Implement basic file reading and file summarisation.
+- [x] Implement basic email reading and sending.
+- [x] Implement a simple RAG path for document-grounded AI responses.
+- [ ] Expand file/document format coverage and improve extraction quality.
+- [ ] Strengthen RAG with better chunking, indexing, retrieval evaluation, and source citations.
+- [ ] Harden email nodes with clearer permission scopes, safe test/send behavior, and robust error handling.
+- [ ] Improve structured AI outputs, schema validation, and failure recovery.
+- [ ] Complete human approval and review steps end to end.
 - [ ] Add clear runtime feedback for unsupported or unconfigured nodes.
 
 ### Phase 3: Expand integrations and tools
