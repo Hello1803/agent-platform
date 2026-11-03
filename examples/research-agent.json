@@ -1,0 +1,50 @@
+{
+  "specVersion": "1.0.0",
+  "metadata": {
+    "id": "agt_research_001",
+    "name": "Research Assistant",
+    "description": "Takes a topic from the user and returns a researched summary.",
+    "status": "published",
+    "version": "1.2.0",
+    "publishedVersion": "1.2.0",
+    "createdAt": "2026-07-10T09:00:00Z",
+    "updatedAt": "2026-08-20T14:00:00Z",
+    "owner": "user_123",
+    "tags": ["research"]
+  },
+  "goal": "Research a topic the user provides and return a clear, well-sourced summary.",
+  "instructions": "Prefer recent, credible sources. Keep the summary under 500 words unless asked for more detail.",
+  "triggers": [
+    { "id": "trg_manual", "type": "manual" },
+    { "id": "trg_api", "type": "api" }
+  ],
+  "nodes": [
+    { "id": "n_trigger", "type": "trigger_manual", "category": "trigger", "label": "Manual Trigger",
+      "canvasPosition": { "x": 0, "y": 0 } },
+
+    { "id": "n_search", "type": "search_web", "category": "tool", "label": "Search Web",
+      "toolRefs": ["tool_web_search"],
+      "canvasPosition": { "x": 0, "y": 120 } },
+
+    { "id": "n_summarize", "type": "summarize", "category": "ai", "label": "Summarize",
+      "executionType": "probabilistic", "confidenceThreshold": 0.6,
+      "canvasPosition": { "x": 0, "y": 240 } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "n_trigger", "target": "n_search" },
+    { "id": "e2", "source": "n_search", "target": "n_summarize" }
+  ],
+  "tools": [
+    { "id": "tool_web_search", "toolId": "web.search", "displayName": "Web Search (demo)", "permissions": ["read"], "mode": "demo" }
+  ],
+  "memory": { "enabled": true, "type": "conversation_buffer", "scope": "session", "retentionDays": 30 },
+  "permissions": { "allow": ["web.search"], "deny": ["email.send", "files.delete"] },
+  "humanApproval": [],
+  "policies": { "promptInjectionDefenses": true, "auditLog": true, "maxRunDurationSeconds": 180 },
+  "runtimeConfig": {
+    "model": "anthropic:claude-sonnet-5",
+    "temperature": 0.4,
+    "checkpointing": true,
+    "timeoutSeconds": 90
+  }
+}

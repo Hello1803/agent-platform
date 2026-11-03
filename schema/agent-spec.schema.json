@@ -1,0 +1,633 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agentplatform.dev/schema/agent-spec.schema.json",
+  "title": "AgentSpecification",
+  "description": "The single source of truth for an agent. Produced/mutated by the NL compiler and the visual editor, validated by the Agent Compiler, then compiled into a runtime execution graph.",
+  "type": "object",
+  "required": [
+    "specVersion",
+    "metadata",
+    "goal",
+    "nodes",
+    "edges"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "specVersion": {
+      "type": "string",
+      "description": "Version of the AgentSpecification schema itself (not the agent's own version). Lets the compiler handle migrations.",
+      "const": "1.0.0"
+    },
+    "metadata": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "status",
+        "version",
+        "createdAt",
+        "updatedAt"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable UUID for the agent, constant across versions."
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "published",
+            "archived"
+          ]
+        },
+        "version": {
+          "type": "string",
+          "description": "Semver-style version of this spec revision, e.g. '1.4.0'."
+        },
+        "publishedVersion": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Version currently live, if different from this draft (see Publishing/Versioning)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "agentId": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The lightweight Agent container this workflow belongs to. Defaults to this workflow's own id when unset (single-workflow agent, unchanged legacy behavior)."
+        },
+        "enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether this workflow is active (e.g. for scheduled/webhook triggers)."
+        }
+      }
+    },
+    "goal": {
+      "type": "string",
+      "description": "High-level natural-language purpose of the agent, shown to users and used by the LLM at runtime.",
+      "minLength": 1
+    },
+    "instructions": {
+      "type": "string",
+      "description": "System-level instructions / persona / constraints for any AI nodes in this agent."
+    },
+    "triggers": {
+      "type": "array",
+      "description": "Zero or more ways this agent can be started (see 'Ways to Run an Agent').",
+      "items": {
+        "$ref": "#/$defs/Trigger"
+      }
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/Node"
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Edge"
+      }
+    },
+    "tools": {
+      "type": "array",
+      "description": "Registry of tool bindings available to nodes in this agent, each with explicit permission scope.",
+      "items": {
+        "$ref": "#/$defs/ToolBinding"
+      }
+    },
+    "memory": {
+      "$ref": "#/$defs/MemoryConfig"
+    },
+    "permissions": {
+      "$ref": "#/$defs/PermissionSet"
+    },
+    "humanApproval": {
+      "type": "array",
+      "description": "Rules mapping specific actions/nodes to an autonomy level.",
+      "items": {
+        "$ref": "#/$defs/ApprovalRule"
+      }
+    },
+    "policies": {
+      "$ref": "#/$defs/Policies"
+    },
+    "runtimeConfig": {
+      "$ref": "#/$defs/RuntimeConfig"
+    }
+  },
+  "$defs": {
+    "Trigger": {
+      "type": "object",
+      "required": [
+        "id",
+        "type"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "schedule",
+            "webhook",
+            "email",
+            "file_change",
+            "external_event",
+            "api"
+          ]
+        },
+        "config": {
+          "type": "object",
+          "additionalProperties": true
+        }
+      }
+    },
+    "Node": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "category",
+        "label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "description": "Semantic node type (see Node Types section). Not a raw code primitive.",
+          "enum": [
+            "ai_agent",
+            "ask_ai",
+            "classify",
+            "extract_information",
+            "summarize",
+            "make_decision",
+            "run_agent",
+            "search_web",
+            "open_website",
+            "read_email",
+            "send_email",
+            "search_documents",
+            "read_file",
+            "write_file",
+            "database",
+            "api_call",
+            "code",
+            "preview",
+            "rag_index",
+            "rag_query",
+            "browser",
+            "if_else",
+            "switch",
+            "loop",
+            "parallel",
+            "merge",
+            "wait",
+            "retry",
+            "human_approval",
+            "ask_user",
+            "review",
+            "confirm",
+            "trigger_manual",
+            "trigger_schedule",
+            "trigger_email",
+            "trigger_webhook",
+            "trigger_file_change",
+            "trigger_external_event"
+          ]
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "ai",
+            "tool",
+            "control",
+            "human",
+            "trigger"
+          ]
+        },
+        "label": {
+          "type": "string",
+          "description": "Human-readable name shown on the canvas."
+        },
+        "executionType": {
+          "type": "string",
+          "description": "Distinguishes deterministic logic from LLM-driven decisions (see Deterministic vs Probabilistic Nodes).",
+          "enum": [
+            "deterministic",
+            "probabilistic"
+          ],
+          "default": "deterministic"
+        },
+        "confidenceThreshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "For probabilistic nodes: minimum model confidence required before proceeding without escalation."
+        },
+        "config": {
+          "type": "object",
+          "description": "Node-type-specific configuration (e.g. prompt, model, condition expression, schedule cron, tool params).",
+          "additionalProperties": true
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Port"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Port"
+          }
+        },
+        "toolRefs": {
+          "type": "array",
+          "description": "IDs of ToolBinding entries this node is permitted to invoke.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "subgraph": {
+          "description": "Optional nested AgentSpecification for the 'agent as a node inside a workflow' pattern (see Agent vs Workflow).",
+          "$ref": "#/$defs/SubgraphRef"
+        },
+        "canvasPosition": {
+          "type": "object",
+          "description": "Visual editor layout hint. Purely presentational; never affects execution semantics.",
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "Port": {
+      "type": "object",
+      "required": [
+        "id",
+        "name"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "dataType": {
+          "type": "string",
+          "enum": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            "file",
+            "any"
+          ]
+        },
+        "required": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "Edge": {
+      "type": "object",
+      "required": [
+        "id",
+        "source",
+        "target"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "description": "Source node id."
+        },
+        "sourceHandle": {
+          "type": "string",
+          "description": "Source port id, for nodes with multiple outputs (e.g. if_else true/false)."
+        },
+        "target": {
+          "type": "string",
+          "description": "Target node id."
+        },
+        "targetHandle": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "object",
+          "description": "Optional condition gating this edge. Omitted for unconditional edges.",
+          "properties": {
+            "expression": {
+              "type": "string",
+              "description": "Deterministic boolean expression, e.g. 'amount > 10000'."
+            },
+            "kind": {
+              "type": "string",
+              "enum": [
+                "deterministic",
+                "ai_decision"
+              ],
+              "default": "deterministic"
+            }
+          }
+        },
+        "priority": {
+          "type": "integer",
+          "description": "Evaluation order when multiple conditional edges leave the same node."
+        },
+        "label": {
+          "type": "string"
+        }
+      }
+    },
+    "ToolBinding": {
+      "type": "object",
+      "required": [
+        "id",
+        "toolId",
+        "permissions"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ID used by Node.toolRefs to reference this binding."
+        },
+        "toolId": {
+          "type": "string",
+          "description": "Identifier in the tool registry, e.g. 'gmail.send', 'web.search', 'mcp.server_x.tool_y'."
+        },
+        "displayName": {
+          "type": "string"
+        },
+        "credentialRef": {
+          "type": "string",
+          "description": "Reference into the credential/secrets store. Never inline secrets."
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicit scopes granted, e.g. ['read'], ['read','send']."
+        },
+        "rateLimit": {
+          "type": "object",
+          "properties": {
+            "maxCalls": {
+              "type": "integer"
+            },
+            "perSeconds": {
+              "type": "integer"
+            }
+          }
+        },
+        "mode": {
+          "type": "string",
+          "enum": [
+            "demo",
+            "connected"
+          ],
+          "default": "demo",
+          "description": "Demo bindings may return documented stub/demo results; connected bindings require an external credential when the registry says so."
+        }
+      }
+    },
+    "MemoryConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "default": false
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "none",
+            "conversation_buffer",
+            "vector_store",
+            "key_value",
+            "summary"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "run",
+            "session",
+            "agent_global"
+          ]
+        },
+        "retentionDays": {
+          "type": "integer"
+        }
+      }
+    },
+    "PermissionSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicitly allowed capability strings, e.g. 'web.search', 'email.read'."
+        },
+        "deny": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Explicitly denied capability strings. Deny overrides allow."
+        }
+      }
+    },
+    "ApprovalRule": {
+      "type": "object",
+      "required": [
+        "id",
+        "appliesTo",
+        "autonomyLevel"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "appliesTo": {
+          "type": "object",
+          "description": "What this rule governs: a specific node, or a category of action.",
+          "properties": {
+            "nodeId": {
+              "type": "string"
+            },
+            "actionCategory": {
+              "type": "string",
+              "enum": [
+                "money",
+                "send_message",
+                "delete_data",
+                "account_change",
+                "external_publish",
+                "sensitive_info",
+                "other"
+              ]
+            }
+          }
+        },
+        "autonomyLevel": {
+          "type": "string",
+          "description": "See Human-in-the-Loop levels.",
+          "enum": [
+            "suggest",
+            "ask_permission",
+            "automatic"
+          ]
+        },
+        "approverRole": {
+          "type": "string",
+          "default": "owner"
+        }
+      }
+    },
+    "Policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "toolAllowlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dataAccessBoundaries": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "promptInjectionDefenses": {
+          "type": "boolean",
+          "default": true
+        },
+        "auditLog": {
+          "type": "boolean",
+          "default": true
+        },
+        "maxRunDurationSeconds": {
+          "type": "integer"
+        },
+        "maxCostPerRun": {
+          "type": "number"
+        }
+      }
+    },
+    "RuntimeConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": "string",
+          "description": "Model-agnostic identifier, e.g. 'provider:claude-sonnet-4-6'."
+        },
+        "temperature": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "maxTokens": {
+          "type": "integer"
+        },
+        "checkpointing": {
+          "type": "boolean",
+          "default": true
+        },
+        "retryPolicy": {
+          "type": "object",
+          "properties": {
+            "maxRetries": {
+              "type": "integer",
+              "default": 2
+            },
+            "backoffSeconds": {
+              "type": "integer",
+              "default": 5
+            }
+          }
+        },
+        "timeoutSeconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "SubgraphRef": {
+      "type": "object",
+      "required": [
+        "agentId"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "description": "ID of another published AgentSpecification used as a node (Agent-as-node)."
+        },
+        "versionPin": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

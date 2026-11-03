@@ -1,0 +1,93 @@
+{
+  "specVersion": "1.0.0",
+  "metadata": {
+    "id": "agt_invoice_001",
+    "name": "Invoice Processor",
+    "description": "Reads invoices from email, extracts data, saves to a spreadsheet, and asks before sending any emails.",
+    "status": "draft",
+    "version": "1.0.0",
+    "publishedVersion": null,
+    "createdAt": "2026-08-01T09:00:00Z",
+    "updatedAt": "2026-08-27T10:00:00Z",
+    "owner": "user_123",
+    "tags": ["finance", "email"]
+  },
+  "goal": "Read my invoices, extract the amount and due date, save them to a spreadsheet, and ask me before sending any emails.",
+  "instructions": "You process incoming invoice emails carefully. Never send an email without explicit human approval.",
+  "triggers": [
+    { "id": "trg_new_email", "type": "email", "config": { "folder": "inbox" } }
+  ],
+  "nodes": [
+    { "id": "n_trigger", "type": "trigger_email", "category": "trigger", "label": "New Email",
+      "canvasPosition": { "x": 0, "y": 0 } },
+
+    { "id": "n_classify", "type": "classify", "category": "ai", "label": "Classify Email",
+      "executionType": "probabilistic", "confidenceThreshold": 0.75,
+      "config": { "labels": ["invoice", "not_invoice"] },
+      "inputs": [{ "id": "in_email", "name": "email", "dataType": "object", "required": true }],
+      "outputs": [{ "id": "out_label", "name": "label", "dataType": "string" }],
+      "canvasPosition": { "x": 0, "y": 120 } },
+
+    { "id": "n_extract", "type": "extract_information", "category": "ai", "label": "Extract Invoice Data",
+      "executionType": "probabilistic", "confidenceThreshold": 0.8,
+      "config": { "fields": ["amount", "due_date", "vendor"] },
+      "canvasPosition": { "x": 0, "y": 260 } },
+
+    { "id": "n_save", "type": "database", "category": "tool", "label": "Save to Spreadsheet",
+      "toolRefs": ["tool_sheets"],
+      "config": { "fields": ["amount", "due_date", "vendor"] },
+      "canvasPosition": { "x": 0, "y": 380 } },
+
+    { "id": "n_gen_email", "type": "ai_agent", "category": "ai", "label": "Generate Email",
+      "executionType": "probabilistic", "confidenceThreshold": 0.7,
+      "canvasPosition": { "x": 0, "y": 500 } },
+
+    { "id": "n_approval", "type": "human_approval", "category": "human", "label": "Human Approval",
+      "config": { "actionCategory": "send_message" },
+      "canvasPosition": { "x": 0, "y": 620 } },
+
+    { "id": "n_send", "type": "send_email", "category": "tool", "label": "Send Email",
+      "toolRefs": ["tool_gmail_send"],
+      "canvasPosition": { "x": 0, "y": 740 } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "n_trigger", "target": "n_classify" },
+    { "id": "e2", "source": "n_classify", "target": "n_extract",
+      "condition": { "expression": "label == 'invoice'", "kind": "deterministic" }, "priority": 1,
+      "label": "Yes" },
+    { "id": "e3", "source": "n_extract", "target": "n_save" },
+    { "id": "e4", "source": "n_save", "target": "n_gen_email" },
+    { "id": "e5", "source": "n_gen_email", "target": "n_approval" },
+    { "id": "e6", "source": "n_approval", "target": "n_send",
+      "condition": { "expression": "approved == true", "kind": "deterministic" } }
+  ],
+  "tools": [
+    { "id": "tool_sheets", "toolId": "google_sheets.append_row", "displayName": "Google Sheets",
+      "credentialRef": "cred_user123_sheets", "permissions": ["write"], "mode": "demo" },
+    { "id": "tool_gmail_send", "toolId": "gmail.send", "displayName": "Gmail",
+      "credentialRef": "cred_user123_gmail", "permissions": ["send"], "mode": "demo" }
+  ],
+  "memory": { "enabled": false, "type": "none", "scope": "run" },
+  "permissions": {
+    "allow": ["email.read", "sheets.write"],
+    "deny": ["files.delete", "purchases.make"]
+  },
+  "humanApproval": [
+    { "id": "appr_send_email", "appliesTo": { "actionCategory": "send_message" },
+      "autonomyLevel": "ask_permission", "approverRole": "owner" }
+  ],
+  "policies": {
+    "toolAllowlist": ["google_sheets.append_row", "gmail.send"],
+    "dataAccessBoundaries": ["inbox_only"],
+    "promptInjectionDefenses": true,
+    "auditLog": true,
+    "maxRunDurationSeconds": 300
+  },
+  "runtimeConfig": {
+    "model": "anthropic:claude-sonnet-5",
+    "temperature": 0.2,
+    "checkpointing": true,
+    "retryPolicy": { "maxRetries": 2, "backoffSeconds": 5 },
+    "timeoutSeconds": 120
+  }
+}

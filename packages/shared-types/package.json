@@ -1,0 +1,12 @@
+{
+  "name": "@agent-platform/shared-types",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TypeScript types for the AgentSpecification IR, mirroring schema/agent-spec.schema.json and backend/models/agent_spec.py.",
+  "type": "module",
+  "main": "src/agent-spec.ts",
+  "types": "src/agent-spec.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit --strict src/agent-spec.ts"
+  }
+}

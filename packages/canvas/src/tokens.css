@@ -1,0 +1,65 @@
+/**
+ * Design tokens for the agent canvas.
+ *
+ * The one deliberate signature choice here operationalizes a specific
+ * requirement from the architecture doc (section 11, "Deterministic vs
+ * Probabilistic Nodes"): a user must be able to tell at a glance which
+ * parts of their agent are fixed logic and which depend on model
+ * behavior. Everything else (category colors, spacing, type) is kept
+ * quiet so that distinction reads clearly:
+ *
+ *   deterministic  -> solid left border, sharp corners, solid outline
+ *   probabilistic  -> dashed outline, gradient left border, confidence chip
+ *
+ * Category color is a SEPARATE axis from determinism — a node's category
+ * (ai/tool/control/human/trigger) sets its color; its executionType sets
+ * its border style. A probabilistic "ai" node and a deterministic "tool"
+ * node should never be confusable at a glance, but a probabilistic "ai"
+ * node and a probabilistic "control"-adjacent decision should read as
+ * clearly related.
+ */
+
+.agent-canvas {
+  --ac-canvas-bg: #f6f7f5;
+  --ac-grid-dot: #dde1dc;
+  --ac-ink: #16181a;
+  --ac-ink-muted: #6b7280;
+  --ac-surface: #ffffff;
+  --ac-border: #d8dad5;
+
+  --ac-font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --ac-font-body: "Inter", system-ui, sans-serif;
+  --ac-font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  /* Category colors: base (left border / icon) + tint (chip background) + ink (chip text) */
+  --ac-trigger-base: #1b8a5a;
+  --ac-trigger-tint: #e6f4ec;
+  --ac-trigger-ink: #0f5c3b;
+
+  --ac-ai-base: #6d4aff;
+  --ac-ai-base-2: #a855f7; /* gradient endpoint, probabilistic nodes only */
+  --ac-ai-tint: #f1edff;
+  --ac-ai-ink: #4a2fc7;
+
+  --ac-tool-base: #1e6fd9;
+  --ac-tool-tint: #e8f1fc;
+  --ac-tool-ink: #12508f;
+
+  --ac-control-base: #33393f;
+  --ac-control-tint: #eef0f1;
+  --ac-control-ink: #1d2124;
+
+  --ac-human-base: #c2410c;
+  --ac-human-tint: #fbeee6;
+  --ac-human-ink: #8a2e08;
+
+  --ac-edge-default: #9ca3af;
+  --ac-edge-label-bg: #f1f5f9;
+  --ac-edge-label-ink: #111827;
+
+  background-color: var(--ac-canvas-bg);
+  background-image: radial-gradient(circle, var(--ac-grid-dot) 1px, transparent 1px);
+  background-size: 18px 18px;
+  color: var(--ac-ink);
+  font-family: var(--ac-font-body);
+}

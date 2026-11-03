@@ -1,0 +1,44 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+credentials.json
+token.json
+*_token.json
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+coverage/
+*.tsbuildinfo
+
+# Local databases and runtime data
+*.sqlite
+*.sqlite3
+*.db
+agent_platform_files/
+uploads/
+data/local/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

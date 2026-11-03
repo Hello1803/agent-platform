@@ -1,0 +1,14 @@
+{
+  "name": "agent-platform",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test:canvas": "npm run test --workspace=@agent-platform/canvas",
+    "test:canvas:integration": "npm run test:integration --workspace=@agent-platform/canvas",
+    "dev": "npm run dev --workspace=@agent-platform/app",
+    "build": "npm run build --workspace=@agent-platform/app"
+  }
+}
