@@ -288,4 +288,4 @@ When adding a node, aim to include:
 
 ## License
 
-No license has been selected yet. Until a license is added, all rights are reserved by the copyright holder; do not assume the repository is open for reuse. Add a license file before inviting external contributions or permitting reuse.
+No license has been selected yet. Until a license is added, all rights are reserved by the copyright holder; do not assume the repository is open for reuse.
